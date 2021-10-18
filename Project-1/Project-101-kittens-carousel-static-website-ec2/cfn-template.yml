@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  Kittens Carousel is a static website application deployed with Apache Web Server on AWS Elastic Compute Cloud (EC2) Instance using AWS Cloudformation Service.
+  It launch ec2 with security group that enables SSH conection.
+
+Resources:
+  MyProject:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: "ami-02e136e904f3da870"
+      InstanceType: "t2.micro"
+      KeyName: "first_key"  # please use your own key
+      SecurityGroupIds:
+        - sg-0455abd6fde52a0c6
+      Tags:
+        - Key: Name
+          Value: Web-Server-of-StackName
+      UserData: 
+        Fn::Base64: 
+          !Sub |
+            #!/bin/bash
+
+            sudo yum update - y
+            sudo yum install git -y
+            sudo yum install httpd -y
+            cd /var/www/html/
+            wget https://raw.githubusercontent.com/atbudak/AWS-Projects/main/Project-1/Project-101-kittens-carousel-static-website-ec2/static-web/index.html
+            wget https://raw.githubusercontent.com/atbudak/AWS-Projects/main/Project-1/Project-101-kittens-carousel-static-website-ec2/static-web/cat0.jpg
+            wget https://raw.githubusercontent.com/atbudak/AWS-Projects/main/Project-1/Project-101-kittens-carousel-static-website-ec2/static-web/cat1.jpg
+            wget https://raw.githubusercontent.com/atbudak/AWS-Projects/main/Project-1/Project-101-kittens-carousel-static-website-ec2/static-web/cat2.jpg
+            wget https://raw.githubusercontent.com/atbudak/AWS-Projects/main/Project-1/Project-101-kittens-carousel-static-website-ec2/static-web/cat3.png
+            sudo systemctl start httpd
+            sudo systemctl enable httpd
