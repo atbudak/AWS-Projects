@@ -14,12 +14,16 @@ Parameters:
     Description: Please choose your key-pair
     Type: AWS::EC2::KeyPair::KeyName
 
+  myAMI:
+    Description: Please choose your Image Id
+    Type: AWS::EC2::Image::Id
+
 Resources:
 
   myEC2:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-02e136e904f3da870
+      ImageId: !Ref myAMI
       InstanceType: t2.micro
       KeyName: !Ref myKP
       SecurityGroupIds:
@@ -33,14 +37,15 @@ Resources:
         yum update -y
         yum install python -y
         yum update python -y
-        pip3 install Flask -y
-        cd /home/ec2-user/ && mkdir templates
+        pip3 install Flask
+        mkdir templates
         FOLDER="https://raw.githubusercontent.com/atbudak/AWS-Projects/main/Project-2/Project-001-Roman-Numerals-Converter"
         wget $FOLDER/app.py
         cd templates
         wget $FOLDER/templates/index.html
         wget $FOLDER/templates/result.html
         cd ..
+        python3 app.py
         
   mySG:
     Type: AWS::EC2::SecurityGroup
