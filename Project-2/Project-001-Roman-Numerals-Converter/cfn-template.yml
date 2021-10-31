@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  This CloudFormation Template was written for running Roman-Numerals-Converter Website on EC2. 
+  Kittens Carousel Static Website will be deployed on Amazon Linux 2 (ami-02e136e904f3da870) 
+  EC2 Instance with custom security group which allows http connections on port 80 and ssh port 22 from anywhere. 
+  Roman-Numerals-Converter Website is downloaded from my Public Github repository, then deployed on Flask application.
+
+Parameters:
+  myVPC:
+    Description: Please choose your VPC
+    Type: AWS::EC2::VPC::Id
+  
+  myKP:
+    Description: Please choose your key-pair
+    Type: AWS::EC2::KeyPair::KeyName
+
+Resources:
+
+  myEC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-02e136e904f3da870
+      InstanceType: t2.micro
+      KeyName: !Ref myKP
+      SecurityGroupIds:
+        - !Ref mySG
+      Tags:
+        - Key: Name
+          Value: Web-Server-of-Ahmet
+
+      UserData: !Base64 |
+        #! /bin/bash
+        yum update -y
+        yum install python -y
+        yum update python -y
+        pip3 install Flask -y
+        cd /home/ec2-user/ && mkdir templates
+        FOLDER="https://raw.githubusercontent.com/atbudak/AWS-Projects/main/Project-2/Project-001-Roman-Numerals-Converter"
+        wget $FOLDER/app.py
+        cd templates
+        wget $FOLDER/templates/index.html
+        wget $FOLDER/templates/result.html
+        cd ..
+        
+  mySG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: This Security group includes SSH and HTTP connections. # Required
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: Roman-Numerals-Converter-SecGrp
+      VpcId: !Ref myVPC
+
+
+Outputs:
+  WebsiteUrl:
+    Value: !Sub
+      - http://${PublicAddress}
+      - PublicAddress: !GetAtt  myEC2.PublicDnsName
+    Description: |
+      Roman Numerals Converter Url
