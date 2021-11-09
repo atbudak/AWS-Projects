@@ -3,6 +3,15 @@ Description: |
   This temp creates an ASG behind an ALB.  
 
 Parameters:
+  DBPassword:
+    NoEcho: "true"
+    Description: The database admin account password
+    Type: String
+    MinLength: "8"
+    MaxLength: "41"
+    AllowedPattern: "[a-zA-Z0-9]*"
+    ConstraintDescription: must contain only alphanumeric characters.
+
   myKP:
     Description: Select your KP
     Type: AWS::EC2::KeyPair::KeyName
@@ -49,7 +58,7 @@ Resources:
       Engine: MySQL
       EngineVersion: 8.0.19
       MasterUsername: admin
-      MasterUserPassword: phonebook123
+      MasterUserPassword: !Ref DBPassword
       DBParameterGroupName: clarusway_phonebook
       VPCSecurityGroups:
         - !GetAtt myBDSecGrp.GroupId
@@ -110,16 +119,20 @@ Resources:
         KeyName: !Ref myKP
         SecurityGroupIds:
           - !GetAtt mySG.GroupId
-        UserData: !Base64 
-          !Sub |
-
-            #! /bin/bash
-            yum update -y
-            yum install git -y
-            sudo pip3 install flask -y
-            sudo pip3 install flask-mysql -y
-            
-
+        UserData: 
+          Fn::Base64: 
+            !Sub: |
+              #! /bin/bash
+              yum update -y
+              yum install git -y
+              sudo pip3 install flask -y
+              sudo pip3 install flask-mysql -y
+              git clone git@github.com:atbudak/AWS-Projects.git
+              mkdir /home/ec2-user/phonebook-app && cd /home/ec2-user/phonebook-app
+              cp -R my-projects/AWS/Project-004-Phonebook-Application/* /home/ec2-user/phonebook-app
+              export DB_CONNECTION="${myDB.Endpoint.Address}"
+              echo $DB_CONNECTION > /home/ec2-user/dbserver.endpoint
+              sudo python3 /home/ec2-user/phonebookdir/phonebook-app.py
 
   myTG:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -174,3 +187,19 @@ Outputs:
       - ""
       - - "http://"
         - !GetAtt myALB.DNSName 
+    
+  JDBCConnectionString:
+    Description: JDBC connection string for the database
+    Value:
+      Fn::Join:
+        - ""
+        - - jdbc:mysql://
+          - Fn::GetAtt:
+              - MyDB
+              - Endpoint.Address
+          - ":"
+          - Fn::GetAtt:
+              - MyDB
+              - Endpoint.Port
+          - /
+          - clarusway_phonebook
