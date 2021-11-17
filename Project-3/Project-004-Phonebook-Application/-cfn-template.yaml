@@ -62,6 +62,7 @@ Resources:
       DBParameterGroupName: clarusway_phonebook
       VPCSecurityGroups:
         - !GetAtt myBDSecGrp.GroupId
+    DeletionPolicy: Delete
 
   myListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -121,18 +122,18 @@ Resources:
           - !GetAtt mySG.GroupId
         UserData: 
           Fn::Base64: 
-            !Sub: |
-              #! /bin/bash
-              yum update -y
-              yum install git -y
-              sudo pip3 install flask -y
-              sudo pip3 install flask-mysql -y
-              git clone git@github.com:atbudak/AWS-Projects.git
-              mkdir /home/ec2-user/phonebook-app && cd /home/ec2-user/phonebook-app
-              cp -R my-projects/AWS/Project-004-Phonebook-Application/* /home/ec2-user/phonebook-app
-              export DB_CONNECTION="${myDB.Endpoint.Address}"
-              echo $DB_CONNECTION > /home/ec2-user/dbserver.endpoint
-              sudo python3 /home/ec2-user/phonebookdir/phonebook-app.py
+            |
+            #! /bin/bash
+            yum update -y
+            yum install git -y
+            sudo pip3 install flask
+            sudo pip3 install flask-mysql
+            git clone https://github.com/atbudak/AWS-Projects.git .
+            mkdir /home/ec2-user/phonebookdir && cd /home/ec2-user/phonebookdir
+            cp -R /home/ec2-user/Project-3/Project-004-Phonebook-Application/* /home/ec2-user/phonebookdir
+            export DB_CONNECTION="${myDB.Endpoint.Address}"
+            echo $DB_CONNECTION > /home/ec2-user/dbserver.endpoint
+            sudo python3 /home/ec2-user/phonebookdir/phonebook-app.py
 
   myTG:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
